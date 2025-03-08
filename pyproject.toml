@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "crud-with-mysql"
+version = "0.1.0"
+description = ""
+authors = ["Juliana Gutierrez <alejuli.0627@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+fastapi = {extras = ["standard"], version = "^0.115.11"}
+sqlmodel = "^0.0.23"
+python-dotenv = "^1.0.1"
+dotenv = "^0.9.9"
+pymysql = "^1.1.1"
+cryptography = "^44.0.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
