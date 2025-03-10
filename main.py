@@ -13,19 +13,6 @@ password_db = os.getenv('PASSWORD')
 host_db = os.getenv('HOST_DB')
 name_db = os.getenv('NAME_DB')
 
-# Define the SQLmodel and connection:
-url_connection = f"mysql+pymysql://{user_db}:{password_db}@{host_db}:3306/{name_db}"
-engine = create_engine(url_connection)
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-def get_session():
-    with Session(engine) as session:
-        yield session
-
-session_dep = Annotated[Session, Depends(get_session)]
-
 # Define models
 class HeroBase(SQLModel):
     name:str = Field(index=True)
@@ -46,6 +33,19 @@ class HeroUpdate(HeroBase):
     age:int | None = None
     secret_name:str | None = None
 
+# Define the SQLmodel and connection:
+url_connection = f"mysql+pymysql://{user_db}:{password_db}@{host_db}:3306/{name_db}"
+engine = create_engine(url_connection)
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+SessionDep = Annotated[Session, Depends(get_session)]
+
 # API - Paths
 app = FastAPI()
 
@@ -58,7 +58,7 @@ def on_startup():
     create_db_and_tables()
 
 @app.post("/heroes/", response_model= HeroPublic)
-def create_hero(hero: HeroCreate, session: session_dep):
+def create_hero(hero: HeroCreate, session: SessionDep):
     db_hero = Hero.model_validate(hero)
     session.add(db_hero)
     session.commit()
@@ -67,7 +67,7 @@ def create_hero(hero: HeroCreate, session: session_dep):
 
 @app.get("/heroes/", response_model=list[HeroPublic])
 def read_heroes(
-    session: session_dep,
+    session: SessionDep,
     offset: int=0,
     limit: Annotated[int, Query(le=100)] = 100
 ):
@@ -75,14 +75,14 @@ def read_heroes(
     return heroes
 
 @app.get("/heroes/{hero_id}", response_model=HeroPublic)
-def read_hero(hero_id: int,session: session_dep):
+def read_hero(hero_id: int,session: SessionDep):
     hero = session.get(Hero, hero_id)
     if not hero:
         raise HTTPException(status_code=404, detail="Hero not found")
     return hero
 
 @app.patch("/heroes/{hero_id}", response_model=HeroPublic)
-def update_hero(hero_id: int, hero: HeroUpdate, session: session_dep):
+def update_hero(hero_id: int, hero: HeroUpdate, session: SessionDep):
     hero_db = session.get(Hero, hero_id)
     if not hero_db:
         raise HTTPException(status_code=404, detail="Hero not found")
@@ -94,7 +94,7 @@ def update_hero(hero_id: int, hero: HeroUpdate, session: session_dep):
     return hero_db
 
 @app.delete("/heroes/{hero_id}")
-def update_hero(hero_id: int, session: session_dep):
+def update_hero(hero_id: int, session: SessionDep):
     hero = session.get(Hero, hero_id)
     if not hero:
         raise HTTPException(status_code=404, detail="Hero not found")
