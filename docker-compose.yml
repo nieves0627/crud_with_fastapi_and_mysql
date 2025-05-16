@@ -1,0 +1,15 @@
+services:
+  mysql-db:
+    image: mysql:latest
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: your-password  # Replace with your password
+      MYSQL_DATABASE: tests  # Auto-creates the database
+    ports:
+      - "3306:3306"  # Maps host port 3306 to container port 3306
+    volumes:
+      - mysql_data:/var/lib/mysql  # Persists database data
+    restart: unless-stopped
+
+volumes:
+  mysql_data:  # Named volume for data persistence
